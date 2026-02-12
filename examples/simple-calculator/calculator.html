@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a2e;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  .calculator {
+    width: 320px;
+    background: #16213e;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow:
+      0 25px 60px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Display */
+  .display {
+    background: #0f3460;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+    overflow: hidden;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .display .expression {
+    font-size: 14px;
+    color: #7f8fa6;
+    min-height: 20px;
+    word-break: break-all;
+    text-align: right;
+    margin-bottom: 6px;
+    transition: color 0.2s;
+  }
+
+  .display .current {
+    font-size: 36px;
+    font-weight: 300;
+    color: #eee;
+    word-break: break-all;
+    text-align: right;
+    line-height: 1.2;
+    transition: font-size 0.15s ease;
+  }
+
+  .display .current.shrink { font-size: 26px; }
+  .display .current.shrink-more { font-size: 20px; }
+
+  /* Button grid */
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  button {
+    height: 58px;
+    border: none;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.08s, background 0.15s, box-shadow 0.15s;
+    outline: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button:active {
+    transform: scale(0.93);
+  }
+
+  /* Number buttons */
+  .btn-num {
+    background: #1a1a40;
+    color: #e4e4e4;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .btn-num:hover { background: #252552; }
+
+  /* Operator buttons */
+  .btn-op {
+    background: #e94560;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(233, 69, 96, 0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .btn-op:hover { background: #f05a73; }
+  .btn-op.active {
+    background: #ff7b94;
+    box-shadow: 0 0 18px rgba(233, 69, 96, 0.5);
+  }
+
+  /* Function buttons */
+  .btn-fn {
+    background: #0f3460;
+    color: #a4b0c5;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .btn-fn:hover { background: #154180; color: #c8d0e0; }
+
+  /* Equals button */
+  .btn-eq {
+    background: linear-gradient(135deg, #e94560, #c23152);
+    color: #fff;
+    font-size: 24px;
+    box-shadow: 0 4px 14px rgba(233, 69, 96, 0.4);
+  }
+  .btn-eq:hover {
+    background: linear-gradient(135deg, #f05a73, #d63d62);
+  }
+
+  /* Zero spans two columns */
+  .btn-zero { grid-column: span 2; }
+
+  /* Ripple */
+  @keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+  }
+  .ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.2);
+    transform: scale(0);
+    animation: ripple 0.4s ease-out;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="calculator">
+  <div class="display">
+    <div class="expression" id="expression"></div>
+    <div class="current" id="current">0</div>
+  </div>
+  <div class="buttons">
+    <button class="btn-fn" data-action="clear">AC</button>
+    <button class="btn-fn" data-action="toggle-sign">&plus;/&minus;</button>
+    <button class="btn-fn" data-action="percent">%</button>
+    <button class="btn-op" data-action="operator" data-value="÷">÷</button>
+
+    <button class="btn-num" data-value="7">7</button>
+    <button class="btn-num" data-value="8">8</button>
+    <button class="btn-num" data-value="9">9</button>
+    <button class="btn-op" data-action="operator" data-value="×">×</button>
+
+    <button class="btn-num" data-value="4">4</button>
+    <button class="btn-num" data-value="5">5</button>
+    <button class="btn-num" data-value="6">6</button>
+    <button class="btn-op" data-action="operator" data-value="−">−</button>
+
+    <button class="btn-num" data-value="1">1</button>
+    <button class="btn-num" data-value="2">2</button>
+    <button class="btn-num" data-value="3">3</button>
+    <button class="btn-op" data-action="operator" data-value="+">+</button>
+
+    <button class="btn-num btn-zero" data-value="0">0</button>
+    <button class="btn-num" data-value=".">.</button>
+    <button class="btn-eq" data-action="equals">=</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const expressionEl = $('expression');
+  const currentEl = $('current');
+
+  let current = '0';
+  let previous = null;
+  let operator = null;
+  let resetNext = false;
+
+  function updateDisplay() {
+    currentEl.textContent = current;
+    currentEl.classList.remove('shrink', 'shrink-more');
+    if (current.length > 12) currentEl.classList.add('shrink-more');
+    else if (current.length > 8) currentEl.classList.add('shrink');
+
+    document.querySelectorAll('.btn-op').forEach(btn => {
+      btn.classList.toggle('active', resetNext && btn.dataset.value === operator);
+    });
+  }
+
+  function formatNumber(n) {
+    if (!isFinite(n)) return 'Error';
+    const s = String(n);
+    if (s.length > 14) return parseFloat(n.toPrecision(10)).toString();
+    return s;
+  }
+
+  function calculate(a, op, b) {
+    a = parseFloat(a);
+    b = parseFloat(b);
+    switch (op) {
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b === 0 ? NaN : a / b;
+    }
+  }
+
+  function inputDigit(d) {
+    if (current === 'Error') current = '0';
+    if (resetNext) {
+      current = d === '.' ? '0.' : d;
+      resetNext = false;
+    } else {
+      if (d === '.' && current.includes('.')) return;
+      if (current === '0' && d !== '.') current = d;
+      else {
+        if (current.replace(/[^0-9]/g, '').length >= 15 && d !== '.') return;
+        current = current + d;
+      }
+    }
+    updateDisplay();
+  }
+
+  function setOperator(op) {
+    if (current === 'Error') return;
+    if (operator && !resetNext) {
+      const result = calculate(previous, operator, current);
+      const formatted = formatNumber(result);
+      expressionEl.textContent = formatted + ' ' + op;
+      current = formatted;
+      previous = formatted;
+    } else {
+      previous = current;
+      expressionEl.textContent = current + ' ' + op;
+    }
+    operator = op;
+    resetNext = true;
+    updateDisplay();
+  }
+
+  function doEquals() {
+    if (!operator || previous === null) return;
+    const expr = previous + ' ' + operator + ' ' + current;
+    const result = calculate(previous, operator, current);
+    const formatted = formatNumber(result);
+    expressionEl.textContent = expr + ' =';
+    current = formatted;
+    previous = null;
+    operator = null;
+    resetNext = true;
+    updateDisplay();
+  }
+
+  function clear() {
+    current = '0';
+    previous = null;
+    operator = null;
+    resetNext = false;
+    expressionEl.textContent = '';
+    updateDisplay();
+  }
+
+  function toggleSign() {
+    if (current === '0' || current === 'Error') return;
+    current = current.startsWith('-') ? current.slice(1) : '-' + current;
+    updateDisplay();
+  }
+
+  function percent() {
+    if (current === 'Error') return;
+    const val = parseFloat(current);
+    if (isNaN(val)) return;
+    current = formatNumber(val / 100);
+    resetNext = true;
+    updateDisplay();
+  }
+
+  function createRipple(btn, e) {
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple-effect';
+    const x = (e.clientX || rect.left + rect.width / 2) - rect.left - 20;
+    const y = (e.clientY || rect.top + rect.height / 2) - rect.top - 20;
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+  }
+
+  document.querySelector('.buttons').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    createRipple(btn, e);
+
+    const action = btn.dataset.action;
+    const value = btn.dataset.value;
+
+    if (!action && value) {
+      inputDigit(value);
+    } else {
+      switch (action) {
+        case 'clear': clear(); break;
+        case 'toggle-sign': toggleSign(); break;
+        case 'percent': percent(); break;
+        case 'operator': setOperator(value); break;
+        case 'equals': doEquals(); break;
+      }
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    const key = e.key;
+    if (key >= '0' && key <= '9') inputDigit(key);
+    else if (key === '.') inputDigit('.');
+    else if (key === '+') setOperator('+');
+    else if (key === '-') setOperator('−');
+    else if (key === '*') setOperator('×');
+    else if (key === '/') { e.preventDefault(); setOperator('÷'); }
+    else if (key === 'Enter' || key === '=') doEquals();
+    else if (key === 'Escape') clear();
+    else if (key === '%') percent();
+    else if (key === 'Backspace') {
+      if (current === 'Error') { clear(); return; }
+      if (!resetNext && current.length > 1) current = current.slice(0, -1);
+      else if (!resetNext) current = '0';
+      updateDisplay();
+    }
+  });
+
+  updateDisplay();
+})();
+</script>
+</body>
+</html>
