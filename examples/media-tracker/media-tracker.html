@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0e0e10;
+    --surface: #18181b;
+    --surface2: #1f1f23;
+    --border: #2a2a2e;
+    --text: #efeff1;
+    --text2: #adadb8;
+    --text3: #636369;
+    --accent: #bf94ff;
+    --accent-dim: rgba(191, 148, 255, 0.12);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.1);
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --manga: #f472b6;
+    --anime: #60a5fa;
+    --comics: #a78bfa;
+    --radius: 10px;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 20px 16px 100px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 20px;
+  }
+
+  .header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .count-badge {
+    font-size: 11px;
+    background: var(--surface2);
+    color: var(--text2);
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  /* Filter tabs */
+  .filters {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    background: var(--surface);
+    padding: 3px;
+    border-radius: 8px;
+  }
+
+  .filter-btn {
+    flex: 1;
+    padding: 6px 0;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover { color: var(--text2); }
+  .filter-btn.active { background: var(--surface2); color: var(--text); }
+
+  /* Cards */
+  .card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.15s, transform 0.1s;
+    position: relative;
+  }
+
+  .card:hover { border-color: #3a3a3e; }
+
+  .card-type {
+    width: 3px;
+    height: 28px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .card-type.manga { background: var(--manga); }
+  .card-type.anime { background: var(--anime); }
+  .card-type.comics { background: var(--comics); }
+
+  .card-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-title a {
+    color: var(--text);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-title a:hover { text-decoration: underline; }
+
+  .link-icon {
+    flex-shrink: 0;
+    color: var(--text3);
+    width: 12px;
+    height: 12px;
+  }
+
+  .card-meta {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .type-label {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .type-label.manga { color: var(--manga); background: rgba(244, 114, 182, 0.1); }
+  .type-label.anime { color: var(--anime); background: rgba(96, 165, 250, 0.1); }
+  .type-label.comics { color: var(--comics); background: rgba(167, 139, 250, 0.1); }
+
+  /* Counter controls */
+  .counter {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .counter-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.1s;
+    user-select: none;
+  }
+
+  .counter-btn:first-child { border-radius: 6px 0 0 6px; }
+  .counter-btn:last-child { border-radius: 0 6px 6px 0; }
+
+  .counter-btn:hover { background: var(--border); color: var(--text); }
+  .counter-btn:active { transform: scale(0.92); }
+
+  .counter-val {
+    width: 44px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+
+  /* Delete */
+  .delete-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .card:hover .delete-btn { opacity: 1; }
+  .delete-btn:hover { color: var(--red); background: var(--red-dim); }
+
+  /* Add area */
+  .add-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, var(--bg) 20%);
+    padding: 40px 16px 16px;
+    pointer-events: none;
+  }
+
+  .add-area > * { pointer-events: auto; }
+
+  .add-bar {
+    max-width: 540px;
+    margin: 0 auto;
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+  }
+
+  .add-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: var(--accent);
+    border: none;
+    color: #0e0e10;
+    font-size: 22px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .add-toggle:hover { filter: brightness(1.15); }
+  .add-toggle.open { transform: rotate(45deg); }
+
+  /* Expanded form */
+  .form-panel {
+    max-width: 540px;
+    margin: 0 auto 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-panel.open { display: flex; }
+
+  .form-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .form-input {
+    flex: 1;
+    height: 38px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 0 10px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text3); }
+
+  .type-select {
+    display: flex;
+    gap: 4px;
+  }
+
+  .type-option {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: none;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .type-option:hover { border-color: #3a3a3e; color: var(--text2); }
+  .type-option.active.manga { border-color: var(--manga); color: var(--manga); background: rgba(244, 114, 182, 0.08); }
+  .type-option.active.anime { border-color: var(--anime); color: var(--anime); background: rgba(96, 165, 250, 0.08); }
+  .type-option.active.comics { border-color: var(--comics); color: var(--comics); background: rgba(167, 139, 250, 0.08); }
+
+  .form-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .btn-cancel {
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text2);
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-cancel:hover { border-color: #3a3a3e; }
+
+  .btn-save {
+    padding: 7px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--accent);
+    border: none;
+    border-radius: 7px;
+    color: #0e0e10;
+    cursor: pointer;
+    font-family: inherit;
+    transition: filter 0.15s;
+  }
+
+  .btn-save:hover { filter: brightness(1.15); }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+
+  .empty-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .empty p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* Edit mode */
+  .edit-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    width: 100%;
+  }
+
+  .edit-input:focus { border-color: var(--accent); }
+
+  /* Animations */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card { animation: slideIn 0.2s ease-out; }
+
+  /* Responsive */
+  @media (max-width: 400px) {
+    .card { padding: 10px 12px; gap: 10px; }
+    .counter-val { width: 38px; }
+    .counter-btn { width: 26px; height: 26px; }
+    .counter-val { height: 26px; font-size: 12px; }
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Confirm dialog */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+
+  .confirm-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .confirm-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    width: 280px;
+    text-align: center;
+  }
+
+  .confirm-box p {
+    font-size: 13px;
+    margin-bottom: 16px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  .confirm-box strong {
+    color: var(--text);
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .confirm-actions button {
+    padding: 7px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-confirm-cancel {
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border) !important;
+  }
+
+  .btn-confirm-delete {
+    background: var(--red);
+    color: #0e0e10;
+  }
+
+  .search-bar {
+    margin-bottom: 12px;
+  }
+
+  .search-input {
+    width: 100%;
+    height: 36px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 12px 0 34px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23636369' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text3); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>Tracker <span id="countBadge" class="count-badge">0</span></h1>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="manga">Manga</button>
+    <button class="filter-btn" data-filter="anime">Anime</button>
+    <button class="filter-btn" data-filter="comics">Comics</button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search titles...">
+  </div>
+
+  <div class="card-list" id="cardList"></div>
+
+  <div class="add-area">
+    <div class="form-panel" id="formPanel">
+      <div class="form-row">
+        <input type="text" class="form-input" id="inputTitle" placeholder="Title (e.g. One Piece)">
+      </div>
+      <div class="form-row">
+        <input type="text" class="form-input" id="inputUrl" placeholder="URL (optional)">
+        <input type="number" class="form-input" id="inputNumber" placeholder="#" style="width:60px;flex:none;text-align:center" min="0" value="1">
+      </div>
+      <div class="form-row" style="justify-content:space-between;align-items:center">
+        <div class="type-select">
+          <button class="type-option manga active" data-type="manga">Manga</button>
+          <button class="type-option anime" data-type="anime">Anime</button>
+          <button class="type-option comics" data-type="comics">Comics</button>
+        </div>
+        <div class="form-actions">
+          <button class="btn-cancel" id="btnCancel">Cancel</button>
+          <button class="btn-save" id="btnSave">Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="add-bar">
+      <button class="add-toggle" id="addToggle" title="Add new">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p>Remove <strong id="confirmTitle"></strong>?</p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-cancel" id="confirmCancel">Keep</button>
+      <button class="btn-confirm-delete" id="confirmDelete">Remove</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'media-tracker-v1';
+
+// State
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let activeFilter = 'all';
+let searchQuery = '';
+let formOpen = false;
+let selectedType = 'manga';
+let deleteTarget = null;
+
+// Elements
+const cardList = document.getElementById('cardList');
+const countBadge = document.getElementById('countBadge');
+const addToggle = document.getElementById('addToggle');
+const formPanel = document.getElementById('formPanel');
+const inputTitle = document.getElementById('inputTitle');
+const inputUrl = document.getElementById('inputUrl');
+const inputNumber = document.getElementById('inputNumber');
+const btnCancel = document.getElementById('btnCancel');
+const btnSave = document.getElementById('btnSave');
+const toastEl = document.getElementById('toast');
+const confirmOverlay = document.getElementById('confirmOverlay');
+const confirmTitleEl = document.getElementById('confirmTitle');
+const confirmCancel = document.getElementById('confirmCancel');
+const confirmDeleteBtn = document.getElementById('confirmDelete');
+const searchInput = document.getElementById('searchInput');
+
+// Persist
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+// Toast
+let toastTimer;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1400);
+}
+
+// Escape HTML
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Render
+function render() {
+  const filtered = items.filter(it => {
+    const matchFilter = activeFilter === 'all' || it.type === activeFilter;
+    const matchSearch = !searchQuery || it.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  countBadge.textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    cardList.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">${items.length === 0 ? '&#128214;' : '&#128269;'}</div>
+        <p>${items.length === 0 ? 'Nothing tracked yet.<br>Tap <strong>+</strong> to add your first title.' : 'No matches found.'}</p>
+      </div>`;
+    return;
+  }
+
+  cardList.innerHTML = filtered.map(item => {
+    const hasUrl = item.url && item.url.length > 0;
+    const titleHtml = hasUrl
+      ? `<a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(item.title)}</a><svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`
+      : esc(item.title);
+
+    const label = item.type === 'manga' ? 'Ch' : item.type === 'anime' ? 'Ep' : '#';
+
+    return `
+      <div class="card" data-id="${item.id}">
+        <div class="card-type ${item.type}"></div>
+        <div class="card-info">
+          <div class="card-title">${titleHtml}</div>
+          <div class="card-meta">
+            <span class="type-label ${item.type}">${item.type}</span>
+            <span>${label} ${item.number}</span>
+          </div>
+        </div>
+        <div class="counter">
+          <button class="counter-btn" onclick="decrement('${item.id}')" title="-1">&minus;</button>
+          <div class="counter-val">${item.number}</div>
+          <button class="counter-btn" onclick="increment('${item.id}')" title="+1">+</button>
+        </div>
+        <button class="delete-btn" onclick="confirmRemove('${item.id}')" title="Remove">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`;
+  }).join('');
+
+  // Double-click to edit
+  cardList.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.counter') || e.target.closest('.delete-btn') || e.target.closest('a')) return;
+      startEdit(card.dataset.id);
+    });
+  });
+}
+
+// Increment / Decrement
+function increment(id) {
+  const item = items.find(i => i.id === id);
+  if (item) {
+    item.number++;
+    item.updatedAt = Date.now();
+    save();
+    render();
+  }
+}
+
+function decrement(id) {
+  const item = items.find(i => i.id === id);
+  if (item && item.number > 0) {
+    item.number--;
+    item.updatedAt = Date.now();
+    save();
+    render();
+  }
+}
+
+// Delete confirmation
+function confirmRemove(id) {
+  deleteTarget = id;
+  const item = items.find(i => i.id === id);
+  confirmTitleEl.textContent = item ? item.title : '';
+  confirmOverlay.classList.add('show');
+}
+
+function closeConfirm() {
+  confirmOverlay.classList.remove('show');
+  deleteTarget = null;
+}
+
+function doDelete() {
+  if (deleteTarget) {
+    const item = items.find(i => i.id === deleteTarget);
+    items = items.filter(i => i.id !== deleteTarget);
+    save();
+    render();
+    showToast(`Removed "${item?.title}"`);
+  }
+  closeConfirm();
+}
+
+// Inline edit on double-click
+function startEdit(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const card = cardList.querySelector(`.card[data-id="${id}"]`);
+  if (!card) return;
+
+  const info = card.querySelector('.card-info');
+  info.innerHTML = `
+    <input class="edit-input" data-field="title" value="${esc(item.title)}" placeholder="Title">
+    <input class="edit-input" data-field="url" value="${esc(item.url || '')}" placeholder="URL (optional)" style="margin-top:4px">
+  `;
+
+  const titleInput = info.querySelector('[data-field="title"]');
+  const urlInput = info.querySelector('[data-field="url"]');
+  titleInput.focus();
+  titleInput.select();
+
+  const saveEdit = () => {
+    const newTitle = titleInput.value.trim();
+    const newUrl = urlInput.value.trim();
+    if (newTitle) {
+      item.title = newTitle;
+      item.url = newUrl;
+      item.updatedAt = Date.now();
+      save();
+      showToast('Updated');
+    }
+    render();
+  };
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
+    if (e.key === 'Escape') { e.preventDefault(); render(); }
+  };
+
+  titleInput.addEventListener('keydown', handleKey);
+  urlInput.addEventListener('keydown', handleKey);
+
+  let blurTimeout;
+  const handleBlur = (e) => {
+    clearTimeout(blurTimeout);
+    blurTimeout = setTimeout(() => {
+      if (!info.contains(document.activeElement)) saveEdit();
+    }, 120);
+  };
+
+  titleInput.addEventListener('blur', handleBlur);
+  urlInput.addEventListener('blur', handleBlur);
+}
+
+// Form toggle
+function toggleForm() {
+  formOpen = !formOpen;
+  formPanel.classList.toggle('open', formOpen);
+  addToggle.classList.toggle('open', formOpen);
+  if (formOpen) {
+    inputTitle.value = '';
+    inputUrl.value = '';
+    inputNumber.value = '1';
+    setTimeout(() => inputTitle.focus(), 50);
+  }
+}
+
+function closeForm() {
+  formOpen = false;
+  formPanel.classList.remove('open');
+  addToggle.classList.remove('open');
+}
+
+function addItem() {
+  const title = inputTitle.value.trim();
+  if (!title) { inputTitle.focus(); return; }
+
+  const item = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    title,
+    url: inputUrl.value.trim(),
+    type: selectedType,
+    number: Math.max(0, parseInt(inputNumber.value) || 1),
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+
+  items.unshift(item);
+  save();
+  render();
+  closeForm();
+  showToast(`Added "${title}"`);
+}
+
+// Event listeners
+addToggle.addEventListener('click', toggleForm);
+btnCancel.addEventListener('click', closeForm);
+btnSave.addEventListener('click', addItem);
+confirmCancel.addEventListener('click', closeConfirm);
+confirmDeleteBtn.addEventListener('click', doDelete);
+
+// Type selector
+document.querySelectorAll('.type-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.type-option').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedType = btn.dataset.type;
+  });
+});
+
+// Filter tabs
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+// Search
+searchInput.addEventListener('input', () => {
+  searchQuery = searchInput.value;
+  render();
+});
+
+// Enter to submit in form fields
+[inputTitle, inputUrl, inputNumber].forEach(el => {
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+});
+
+// Escape to close
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (confirmOverlay.classList.contains('show')) closeConfirm();
+    else if (formOpen) closeForm();
+  }
+});
+
+// Expose to inline onclick
+window.increment = increment;
+window.decrement = decrement;
+window.confirmRemove = confirmRemove;
+
+// Init
+render();
+</script>
+</body>
+</html>
